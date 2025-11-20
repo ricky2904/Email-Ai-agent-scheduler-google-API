@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .button { 
+            background: #667eea; 
+            color: white; 
+            padding: 15px 30px; 
+            border: none; 
+            border-radius: 5px; 
+            margin: 10px; 
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .button:hover { background: #5a6fd8; }
+        .result { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 5px; 
+            background: #f9f9f9;
+        }
+        .email { 
+            margin: 10px 0; 
+            padding: 10px; 
+            border: 1px solid #eee; 
+            border-radius: 3px;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 AI Email Scheduler - Frontend Test</h1>
+    
+    <div>
+        <button class="button" onclick="testFetchEmails()">Fetch Emails</button>
+        <button class="button" onclick="testSchedulingEmails()">Scheduled Meeting Emails</button>
+    </div>
+    
+    <div id="result" class="result" style="display: none;">
+        <h3>Results:</h3>
+        <div id="content"></div>
+    </div>
+    
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+        
+        async function testFetchEmails() {
+            showResult('Fetching emails...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/fetch-emails`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `<h4>✅ Successfully fetched ${data.count} emails:</h4>`;
+                    data.emails.forEach((email, index) => {
+                        html += `
+                            <div class="email">
+                                <strong>${email.subject || 'No Subject'}</strong><br>
+                                <small>From: ${email.from}</small><br>
+                                <small>${email.snippet}</small>
+                            </div>
+                        `;
+                    });
+                    showResult(html);
+                } else {
+                    showResult(`❌ Error: ${data.error}`);
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`);
+            }
+        }
+        
+        async function testSchedulingEmails() {
+            showResult('Analyzing emails for scheduling information...');
+            try {
+                const response = await fetch(`${API_BASE_URL}/scheduling-emails`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    let html = `<h4>✅ Found ${data.scheduling_count} emails with scheduling information out of ${data.total_checked} checked:</h4>`;
+                    
+                    if (data.scheduling_emails.length > 0) {
+                        data.scheduling_emails.forEach((email, index) => {
+                            html += `
+                                <div class="email">
+                                    <strong>${email.subject || 'No Subject'}</strong><br>
+                                    <small>From: ${email.from}</small><br>
+                                    <small>${email.snippet}</small>
+                                    ${email.scheduling_data ? `
+                                        <br><strong style="color: green;">📅 Event: ${email.scheduling_data.title}</strong><br>
+                                        <small>Date: ${email.scheduling_data.date} at ${email.scheduling_data.start_time}</small>
+                                    ` : ''}
+                                </div>
+                            `;
+                        });
+                    } else {
+                        html += '<p>No emails with scheduling information found.</p>';
+                    }
+                    showResult(html);
+                } else {
+                    showResult(`❌ Error: ${data.error}`);
+                }
+            } catch (error) {
+                showResult(`❌ Error: ${error.message}`);
+            }
+        }
+        
+        function showResult(content) {
+            document.getElementById('result').style.display = 'block';
+            document.getElementById('content').innerHTML = content;
+        }
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+

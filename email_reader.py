@@ -27,7 +27,7 @@ def authenticate_gmail():
             token.write(creds.to_json())
     return creds
 
-def get_unread_emails(service, max_results=5):
+def get_unread_emails(service, max_results=5, process_emails=False):
     results = service.users().messages().list(userId='me', labelIds=['UNREAD'], maxResults=max_results).execute()
     messages = results.get('messages', [])
 
@@ -59,25 +59,26 @@ def get_unread_emails(service, max_results=5):
         print(f"🔹 Subject: {subject}")
         print(f"🔹 Snippet: {snippet}\n")
 
-        structured = extract_schedule_from_email(snippet)
-        print("🧠 Structured Output:\n", structured)
+        if process_emails:
+            structured = extract_schedule_from_email(snippet)
+            print("🧠 Structured Output:\n", structured)
 
-        try:
-            data = json.loads(structured)
+            try:
+                data = json.loads(structured)
 
-            if "action" not in data:
-                print("\n📋 Scheduling Event:")
-                print(f"Title      : {data['title']}")
-                print(f"Date       : {data['date']}")
-                print(f"Start Time : {data['start_time']}")
-                print(f"End Time   : {data['end_time']}")
-                print(f"Location   : {data.get('location', 'N/A')}")
-                print(f"Participants: {', '.join(data.get('participants', []))}")
+                if "action" not in data:
+                    print("\n📋 Scheduling Event:")
+                    print(f"Title      : {data['title']}")
+                    print(f"Date       : {data['date']}")
+                    print(f"Start Time : {data['start_time']}")
+                    print(f"End Time   : {data['end_time']}")
+                    print(f"Location   : {data.get('location', 'N/A')}")
+                    print(f"Participants: {', '.join(data.get('participants', []))}")
 
-                create_event(data)
+                    create_event(data)
 
-        except Exception as e:
-            print(f"⚠️ Couldn't parse or schedule event: {e}")
+            except Exception as e:
+                print(f"⚠️ Couldn't parse or schedule event: {e}")
 
     return emails
 
@@ -88,9 +89,9 @@ if __name__ == '__main__':
     while True:
         print("\n🔁 Checking for unread emails...\n")
         try:
-            get_unread_emails(service)
+            get_unread_emails(service, process_emails=True)
         except Exception as e:
             print(f"❌ Error during agent run: {e}")
 
-        print("⏳ Sleeping for 5 minutes...")
-        time.sleep(5 * 60)
+        print("⏳ Sleeping for 1 minute...")
+        time.sleep(1 * 60)
